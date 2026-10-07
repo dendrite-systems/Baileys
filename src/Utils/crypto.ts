@@ -1,8 +1,25 @@
-import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from 'crypto'
+import { createCipheriv, createDecipheriv, createHash, createHmac, hkdfSync, randomBytes } from 'crypto'
 import * as curve from 'libsignal/src/curve'
 import { KEY_BUNDLE_TYPE } from '../Defaults'
 import type { KeyPair } from '../Types'
-export { md5, hkdf } from 'whatsapp-rust-bridge'
+
+export function md5(buffer: Uint8Array): Uint8Array {
+	return createHash('md5').update(buffer).digest()
+}
+
+export function hkdf(
+	buffer: Uint8Array,
+	expandedLength: number,
+	options: { salt?: Uint8Array; info?: string }
+): Uint8Array {
+	if (expandedLength === 0) {
+		return new Uint8Array()
+	}
+
+	return new Uint8Array(
+		hkdfSync('sha256', buffer, options.salt ?? new Uint8Array(), options.info ?? '', expandedLength)
+	)
+}
 
 // insure browser & node compatibility
 const { subtle } = globalThis.crypto

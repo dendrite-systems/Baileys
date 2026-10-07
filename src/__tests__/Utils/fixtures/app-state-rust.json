@@ -1,0 +1,36 @@
+{
+  "source": "Baileys 7.0.0-rc14 with whatsapp-rust-bridge 0.5.4; synthetic keys only",
+  "keyData": "2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a",
+  "keyId": "BwcHBwcHBwcHBwcHBwcHBw==",
+  "index": [
+    "archive",
+    "123456789@s.whatsapp.net"
+  ],
+  "patch": {
+    "version": {
+      "version": "1"
+    },
+    "mutations": [
+      {
+        "operation": 0,
+        "record": {
+          "index": {
+            "blob": "7M9i0/EglENNgEbFBwKvSRPq+g+5hBWFjAItazoH9Jg="
+          },
+          "value": {
+            "blob": "pe5295Yy5jXjSi54bRb+64mc0wQyrfI5GxjcpgRumDMtU61w9XRJcKpuF+LKdmzUHRMevOcgYgjSr/kwJUn5g/yUusj9ubxjzObuDRgyySq26oosDhCSR9HnryfY5KvzMtCIghAw1L63bDwB3CdlkQ=="
+          },
+          "keyId": {
+            "id": "BwcHBwcHBwcHBwcHBwcHBw=="
+          }
+        }
+      }
+    ],
+    "snapshotMac": "NuLAFa67Y2hyBpZXMf+T8a+Z2Oj9pbaM70kX1LbRWPY=",
+    "patchMac": "G41hTFxVmvG8v22VlsMJnYObdpxO0WUeZ70Y2lle+fE=",
+    "keyId": {
+      "id": "BwcHBwcHBwcHBwcHBwcHBw=="
+    }
+  },
+  "hash": "0bce1a77589433881ad51570e92d8e96eef2fb872f4d1f25b1903c34aea79e1ca98010265c0ec0163fe86be667ec793cbd104863d49a44fdeeb8fc6cb15422d8da76ef37fe38295a32245e8a2a448647936418139e74817987d61dd59f95e9dd220adac2769a2510fa95d3198547a0a974e21272a3c9078dd355fef6abcf8ffb"
+}
