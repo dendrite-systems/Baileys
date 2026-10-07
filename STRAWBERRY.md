@@ -33,6 +33,10 @@ const socket = makeWASocket({
 The default transport remains Node's `ws`. The Cloudflare adapter uses a fetch upgrade
 to preserve the WhatsApp Origin header and closes locally without waiting indefinitely
 for the peer's close acknowledgement. Node proxy agents are not supported by this adapter.
+Selecting this transport also uses
+protobufjs's portable writer throughout its shared module instance. This preserves the wire
+bytes while avoiding [workerd's Buffer string-writing bug](https://github.com/cloudflare/workerd/issues/6875);
+it does not modify the global Buffer implementation.
 
 An application must own one active connection per linked account, persist credential/key
 updates securely, and reconnect after process or Durable Object eviction. This library

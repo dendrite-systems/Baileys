@@ -1,3 +1,4 @@
+import protobuf from 'protobufjs/minimal.js'
 import { DEFAULT_ORIGIN } from '../../Defaults'
 import { AbstractSocketClient } from './types'
 
@@ -31,6 +32,11 @@ export class CloudflareWebSocketClient extends AbstractSocketClient {
 		if (this.config.agent) {
 			throw new Error('Cloudflare WebSockets do not support Node proxy agents')
 		}
+
+		// workerd's Buffer.utf8Write mishandles an omitted length at nonzero offsets.
+		// Keep protobuf on its public portable writer; do not patch the global Buffer.
+		// https://github.com/cloudflare/workerd/issues/6875
+		protobuf.Writer.create = () => new protobuf.Writer()
 
 		this.state = 'connecting'
 		const controller = new AbortController()

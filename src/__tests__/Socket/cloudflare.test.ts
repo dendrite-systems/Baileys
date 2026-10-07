@@ -1,5 +1,7 @@
 import { jest } from '@jest/globals'
 import { once } from 'events'
+import protobuf from 'protobufjs/minimal.js'
+import { proto } from '../../../WAProto/index.js'
 import { DEFAULT_CONNECTION_CONFIG, DEFAULT_ORIGIN } from '../../Defaults'
 import { CloudflareWebSocketClient } from '../../Socket/Client/cloudflare'
 import { initAuthCreds } from '../../Utils/auth-utils'
@@ -24,9 +26,37 @@ const makeUpgrade = () => {
 	return { socket, response }
 }
 
-afterEach(() => jest.restoreAllMocks())
+const originalWriterCreate = protobuf.Writer.create
+afterEach(() => {
+	jest.restoreAllMocks()
+	protobuf.Writer.create = originalWriterCreate
+})
 
 describe('Cloudflare WebSocket transport', () => {
+	it.each([
+		'a'.repeat(39),
+		'a'.repeat(40),
+		'Strawberry JavaScript WhatsApp integration test. Sent to myself.',
+		'Hello \u{1f353} \u4e16\u754c'.repeat(20)
+	])('encodes nested text with portable protobuf bytes: %s', async text => {
+		const message = { deviceSentMessage: { destinationJid: '12345@s.whatsapp.net', message: { conversation: text } } }
+		const expected = proto.Message.encode(message).finish()
+		const { response } = makeUpgrade()
+		jest.spyOn(globalThis, 'fetch').mockResolvedValue(response)
+		const client = makeClient()
+		const opened = once(client, 'open')
+		client.connect()
+		await opened
+		try {
+			const bytes = proto.Message.encode(message).finish()
+			expect(Buffer.isBuffer(bytes)).toBe(false)
+			expect(Buffer.from(bytes)).toEqual(expected)
+			expect(proto.Message.decode(bytes).deviceSentMessage?.message?.conversation).toBe(text)
+		} finally {
+			client.close()
+		}
+	})
+
 	it('upgrades with the origin and forwards binary frames and send completion', async () => {
 		const { socket, response } = makeUpgrade()
 		const fetch = jest.spyOn(globalThis, 'fetch').mockResolvedValue(response)
