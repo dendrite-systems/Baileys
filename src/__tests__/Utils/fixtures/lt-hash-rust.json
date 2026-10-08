@@ -1,0 +1,10 @@
+{
+  "base": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  "subtract": [
+    "72656d6f7665"
+  ],
+  "add": [
+    "616464"
+  ],
+  "expected": "687817422b2f2efbe22b9c03b9976e9e57aa7e78c96998734ba64351bcad022ba0aabed32c8911883561268525b621f9af92ee2cd84b9961fbee53f32806181ab0dc55b19e500b8efde33b894f047ecaa1c21d4e6ce8e7f40577004e409fba2f5f18793920d7f71717d9e8ad84267773993ffaa049d8dcca5c90f7e5cc44982e"
+}

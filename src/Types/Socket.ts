@@ -1,6 +1,7 @@
 import type { Agent } from 'https'
 import type { URL } from 'url'
 import { proto } from '../../WAProto/index.js'
+import type { AbstractSocketClient } from '../Socket/Client/types'
 import type { ILogger } from '../Utils/logger'
 import type { AuthenticationState, LIDMapping, SignalAuthState, TransactionCapabilityOptions } from './Auth'
 import type { GroupMetadata } from './GroupMetadata'
@@ -33,6 +34,8 @@ export type PatchedMessageWithRecipientJID = proto.IMessage & { recipientJid?: s
 export type SocketConfig = {
 	/** the WS url to connect to WA */
 	waWebSocketUrl: string | URL
+	/** Override the WebSocket transport for runtimes such as Cloudflare Workers. */
+	createWebSocket?: (url: URL, config: SocketConfig) => AbstractSocketClient
 	/** Fails the connection if the socket times out in this interval */
 	connectTimeoutMs: number
 	/** Default timeout for queries, undefined for no timeout */
