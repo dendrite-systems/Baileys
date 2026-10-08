@@ -68,32 +68,43 @@ Consumers should pin a versioned package artifact with lockfile integrity, not a
 
 ## Compact protobuf bindings
 
-All 498 WhatsApp message types and their wire fields remain available. Protobufjs still
-produces the static encoders, decoders, constructors, enums, and TypeScript declarations.
-Object/JSON conversion, factories, type URLs, and field-presence accessors use shared helpers
-and generated field descriptions instead of repeating branches for every message and field.
-Single-field accessors share closures by field name without retaining per-field arrays or
-lookup maps; the temporary registration cache is released after initialization. No runtime schema
-parser, dynamic code generation, or `eval` is required.
+All 498 WhatsApp message types and their wire fields remain available. Protobufjs generates
+constructors, enums, defaults, and the unchanged TypeScript declarations. Shared runtime
+functions encode, decode, and convert messages using one generated set of field descriptions.
+Wire and conversion operations reuse those descriptions; the decoder index holds references,
+not another schema copy. The runtime uses protobufjs's existing minimal Reader/Writer and
+retains its Long, optional-field, oneof, map, unknown-field, and nesting-limit behavior.
+There is no runtime schema parser, reflection graph, dynamic code generation, or new dependency.
+
+This applies the descriptor-driven architecture without switching to protobuf-ts. That switch
+would require adapting Baileys' public object API and 23 nonstandard enum definitions. Keeping
+the established byte primitives preserves the original schema and avoids translating every
+message between two object representations. Single-field presence accessors share closures
+by field name; their registration cache is released after initialization.
 
 Regenerate with `corepack yarn gen:protobuf` from the repository root. The generator derives
-conversion descriptions from the same `WAProto.proto` as the wire codecs, preserves field
-and JSON property order, and rejects new explicit defaults or unsupported scalar kinds
-until their conversion behavior is reviewed. Regeneration also incorporates the nesting
-limits in the pinned protobufjs generator. The shared Long conversions retain the existing
-BigInt-based handling of string and Long values.
+field numbers, types, map keys, and conversion descriptions from `WAProto.proto`, preserving
+wire and JSON property order. It rejects new required/group fields, explicitly unpacked
+repeated fields, unsupported map keys/scalars, and explicit defaults until those behaviors
+are reviewed. All currently defined fields are supported. Unknown incoming fields continue
+to be skipped, and numeric enum values remain open.
 
-The packed local Worker probe decreased from 2909.11 KiB to 1729.05 KiB minified
-(498.41 KiB to 356.47 KiB gzip). A matching unpaired, minified local workerd harness used
-approximately 6.2 MiB of JavaScript heap after snapshot-triggered garbage collection, versus
-8.3 MiB previously. The snapshot retains one bundled source string plus compiled code,
-functions, properties, and runtime structures; compressed transfer size is not RAM usage.
-These are local baseline measurements, not connected-account peak memory or hosted capacity.
-Inspector activity can temporarily increase allocations, so compare the same collection phase.
+Compared with strawberry.3, the packed local Worker probe decreases from 1729.05 to
+1112.54 KiB minified (356.47 to 292.21 KiB gzip). The matching unpaired, minified local workerd
+harness uses approximately 5.5 MiB JavaScript heap after snapshot-triggered garbage collection,
+versus 6.2 MiB previously. A separate schema-only probe with all 498 types retained and 1,000
+synthetic text-message roundtrips decreases from 1049.9 to 433.6 KiB minified and from 4.69 to
+3.65 MiB warm JavaScript heap. These are local baseline measurements, not connected-account
+peak memory, external buffer storage, native process memory, or hosted capacity.
 
-Shared conversion trades some CPU for size: a synthetic 50,000-message fromObject/JSON loop
-took approximately 210 ms instead of 131 ms on the development machine. Wire encoding is
-still generated. Check a representative sync workload before setting production CPU budgets.
-The conversion audit compared all message types with standard generated codecs across
-empty, populated, malformed, enum, byte, map, optional-field, and 64-bit cases, both with and
-without Long support. Existing protocol and crypto tests must also pass before release.
+The shared codec trades some CPU for size. A synthetic Node benchmark of 100,000 short-message
+create/encode/decode roundtrips takes approximately 425 ms versus 243 ms for strawberry.3
+(medians of seven runs). This is not a Cloudflare CPU measurement or a full history-sync workload.
+
+Verification includes 1,120,046 conversion/accessor/wire comparisons and 850,500 decoder
+comparisons against the standard generated codecs, with and without Long support. Decoder
+cases include malformed/truncated input, unknown tags, explicit lengths, and every field of
+all 498 types. Production regression tests cover packed/unpacked values, 64-bit integers,
+unknown enums, presence, nested messages, map keys, and nesting limits. The packed release
+also passes synthetic Signal encryption/decryption and a real WhatsApp handshake/QR probe in
+local workerd. Full phone pairing/history/delivery was not repeated for this optimization.

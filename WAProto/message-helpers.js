@@ -1,3 +1,4 @@
+import { installWireCodecs } from './wire-codecs.js'
 // Conversion semantics adapted from protobufjs. See LICENSE-protobufjs.
 import protobuf from 'protobufjs/minimal.js'
 
@@ -136,7 +137,7 @@ export function installMessageHelpers(definitions) {
 	const optionalAccessors = new Map()
 	for (const [Message, name, fields, fieldOrder] of definitions) {
 		const oneofs = new Map()
-		for (const [key, , , oneof] of fields) {
+		for (const [key, , , , oneof] of fields) {
 			if (!oneof) continue
 			if (!oneofs.has(oneof)) oneofs.set(oneof, [])
 			oneofs.get(oneof).push(key)
@@ -168,6 +169,7 @@ export function installMessageHelpers(definitions) {
 
 function installConversions(Message, name, fields, fieldOrder) {
 	const orderedFields = fieldOrder ? fieldOrder.map(index => fields[index]) : fields
+	installWireCodecs(Message, orderedFields)
 	Message.create = function create(properties) {
 		return new Message(properties)
 	}
@@ -179,7 +181,7 @@ function installConversions(Message, name, fields, fieldOrder) {
 		if (object instanceof Message) return object
 		if (depth > util.recursionLimit) throw Error('maximum nesting depth exceeded')
 		const message = new Message()
-		for (const [key, type, collection] of fields) {
+		for (const [key, type, , collection] of fields) {
 			const value = object[key]
 			if (collection) {
 				if (!value) continue
@@ -212,7 +214,7 @@ function installConversions(Message, name, fields, fieldOrder) {
 					!(options.defaults || (collection === 'array' && options.arrays) || (collection === 'map' && options.objects))
 				)
 					continue
-				for (const [key, type, rule, oneof] of orderedFields) {
+				for (const [key, type, , rule, oneof] of orderedFields) {
 					if (rule !== collection || oneof) continue
 					result[key] =
 						collection === 'array'
@@ -223,7 +225,7 @@ function installConversions(Message, name, fields, fieldOrder) {
 				}
 			}
 		}
-		for (const [key, type, collection, oneof] of orderedFields) {
+		for (const [key, type, , collection, oneof] of orderedFields) {
 			const value = message[key]
 			if (collection) {
 				if (!value) continue

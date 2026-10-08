@@ -29,13 +29,19 @@ function visit(namespace) {
 		const fields = namespace.fieldsArray
 		oneofCount += namespace.oneofsArray.length
 		const descriptors = fields.map(field => {
+			if (field.required || field.delimited) throw Error('Review required or group wire fields: ' + field.fullName)
+			if (field.repeated && !field.packed) throw Error('Review unpacked wire fields: ' + field.fullName)
+			if (field.map && !['uint32', 'string'].includes(field.keyType))
+				throw Error('Review map key type: ' + field.fullName)
 			if (field.options?.default !== undefined) throw Error('Review conversion defaults for ' + field.fullName)
 			const type = field.resolvedType ? field.resolvedType.fullName.slice(1) : JSON.stringify(field.type)
 			if (!field.resolvedType && !scalars.has(field.type)) throw Error('Unsupported scalar: ' + field.type)
 			const rule = field.map ? 'map' : field.repeated ? 'array' : null
-			const parts = [JSON.stringify(field.name), type]
+			// One description serves conversion and wire codecs: name, type, number, collection, oneof, map key.
+			const parts = [JSON.stringify(field.name), type, field.id]
 			if (rule || field.partOf) parts.push(rule ? JSON.stringify(rule) : 'undefined')
-			if (field.partOf) parts.push(JSON.stringify(field.partOf.name))
+			if (field.partOf || field.map) parts.push(field.partOf ? JSON.stringify(field.partOf.name) : 'undefined')
+			if (field.map) parts.push(JSON.stringify(field.keyType))
 			return '[' + parts.join(', ') + ']'
 		})
 		const order = fields
@@ -50,7 +56,8 @@ function visit(namespace) {
 visit(root)
 const file = new URL('./index.js', import.meta.url)
 let source = readFileSync(file, 'utf8')
-if (/\.fromObject =/.test(source)) throw Error('Generate static codecs with --no-convert first')
+if (/\.(fromObject|encode|decode) =/.test(source))
+	throw Error('Generate constructors without conversion or wire codecs first')
 // These accessors are derived from the field descriptions above. Fail closed if
 // a future protobufjs generator changes the expected shape of its static output.
 let removedOneofs = 0
